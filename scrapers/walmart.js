@@ -283,14 +283,33 @@ async function scrapeWalmart() {
         break;
       }
 
-      const nextData = parseNextData(html);
-      if (!nextData) {
-        console.warn(`[Walmart] No __NEXT_DATA__ on "${keyword}" page ${page} — bot check may have triggered`);
-        break;
-      }
+const nextData = parseNextData(html);
 
-      const items = extractItems(nextData);
-      const pagination = extractPagination(nextData);
+if (!nextData) {
+  const lowerHtml = String(html || '').toLowerCase();
+
+  const botCheck =
+    lowerHtml.includes('robot or human') ||
+    lowerHtml.includes('verify you are human') ||
+    lowerHtml.includes('captcha') ||
+    lowerHtml.includes('access denied') ||
+    lowerHtml.includes('cloudflare');
+
+  if (botCheck) {
+    console.warn(
+      `[Walmart] Bot/security challenge detected on "${keyword}" page ${page} — skipping this search`
+    );
+  } else {
+    console.warn(
+      `[Walmart] No __NEXT_DATA__ on "${keyword}" page ${page} and no obvious bot challenge detected — Walmart page format may have changed`
+    );
+  }
+
+  break;
+}
+
+const items = extractItems(nextData);
+const pagination = extractPagination(nextData);
 
       if (page === 1) {
         maxPage = Math.min(pagination.maxPage, config.maxPages);
