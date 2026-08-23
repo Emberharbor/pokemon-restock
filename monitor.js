@@ -192,24 +192,25 @@ return fn()
     }),
   );
 
-  const results = settled.map(s => s.value ?? s.reason);
+const results = settled.map(s => s.value ?? s.reason);
 
-  for (const r of results) {
-if (r.error) {
-  log.error(`${r.name.padEnd(10)} failed — ${r.error.message}`);
-} else if (r.blocked) {
-  log.warn(
-    `${r.name.padEnd(10)} blocked/security challenge — ` +
-log.warn(`${r.name} — skipping comparison (scraper failed)`);
-  );
-} else {
-  log.ok(
-    `${r.name.padEnd(10)} ${r.products.length} product(s) ` +
-    `(${(r.elapsedMs / 1000).toFixed(1)}s)`
-  );
+for (const r of results) {
+  if (r.error) {
+    log.error(`${r.name.padEnd(10)} failed — ${r.error.message}`);
+  } else if (r.blocked) {
+    log.warn(
+      `${r.name.padEnd(10)} blocked/security challenge — ` +
+      `skipping this retailer`
+    );
+  } else {
+    log.ok(
+      `${r.name.padEnd(10)} ${r.products.length} product(s) ` +
+      `(${(r.elapsedMs / 1000).toFixed(1)}s)`
+    );
+  }
 }
 
-  return results;
+return results;
 }
 
 // ── Phase 3a: Initialization (first run) ──────────────────────────────────────
