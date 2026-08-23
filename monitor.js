@@ -179,8 +179,15 @@ async function scrapeRetailers(phaseNum, totalPhases) {
   const settled = await Promise.allSettled(
     enabled.map(({ key, name, fn }) => {
       const t0 = Date.now();
-      return fn()
-        .then(products => ({ key, name, products, elapsedMs: Date.now() - t0, error: null }))
+return fn()
+  .then(products => ({
+    key,
+    name,
+    products,
+    blocked: products?.blocked === true,
+    elapsedMs: Date.now() - t0,
+    error: null,
+  }))
         .catch(err   => ({ key, name, products: [],  elapsedMs: Date.now() - t0, error: err }));
     }),
   );
@@ -188,12 +195,19 @@ async function scrapeRetailers(phaseNum, totalPhases) {
   const results = settled.map(s => s.value ?? s.reason);
 
   for (const r of results) {
-    if (r.error) {
-      log.error(`${r.name.padEnd(10)} failed — ${r.error.message}`);
-    } else {
-      log.ok(`${r.name.padEnd(10)} ${r.products.length} product(s)  (${(r.elapsedMs / 1000).toFixed(1)}s)`);
-    }
-  }
+if (r.error) {
+  log.error(`${r.name.padEnd(10)} failed — ${r.error.message}`);
+} else if (r.blocked) {
+  log.warn(
+    `${r.name.padEnd(10)} blocked/security challenge — ` +
+    `skipping comparison (${r.elapsedMs / 1000).toFixed(1)}s`
+  );
+} else {
+  log.ok(
+    `${r.name.padEnd(10)} ${r.products.length} product(s) ` +
+    `(${(r.elapsedMs / 1000).toFixed(1)}s)`
+  );
+}
 
   return results;
 }
@@ -245,10 +259,15 @@ function compareRetailers(scraperResults, state, phaseNum, totalPhases) {
   let   totalSeen    = 0;
 
   for (const r of scraperResults) {
-    if (r.error) {
-      log.warn(`${r.name} — skipping comparison (scraper failed)`);
-      continue;
-    }
+if (r.error) {
+  log.warn(`${r.name} — skipping comparison (scraper failed)`);
+  continue;
+}
+
+if (r.blocked) {
+  log.warn(`${r.name} — skipping comparison (security challenge)`);
+  continue;
+}
 
     totalSeen += r.products.length;
     const { newProducts, restockedProducts } = stateMod.compareAndUpdate(r.key, r.products, state);
