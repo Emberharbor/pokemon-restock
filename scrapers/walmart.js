@@ -264,9 +264,10 @@ async function scrapeWalmart() {
 
   await sleep(1000); // brief pause before first search
 
-  const products        = [];
-  const seen            = new Set();
-  let   thirdPartyCount = 0;
+const products        = [];
+const seen            = new Set();
+let   thirdPartyCount = 0;
+let   blocked          = false;
 
   for (const keyword of SEARCH_KEYWORDS) {
     let page    = 1;
@@ -295,11 +296,15 @@ if (!nextData) {
     lowerHtml.includes('access denied') ||
     lowerHtml.includes('cloudflare');
 
-  if (botCheck) {
-    console.warn(
-      `[Walmart] Bot/security challenge detected on "${keyword}" page ${page} — skipping this search`
-    );
-  } else {
+if (botCheck) {
+  blocked = true;
+
+  console.warn(
+    `[Walmart] Bot/security challenge detected on "${keyword}" page ${page} — Walmart data unavailable`
+  );
+
+  break;
+} else {
     console.warn(
       `[Walmart] No __NEXT_DATA__ on "${keyword}" page ${page} and no obvious bot challenge detected — Walmart page format may have changed`
     );
@@ -361,6 +366,21 @@ const pagination = extractPagination(nextData);
     `(${inStock} in-stock, ${outOfStock} OOS, ${preOrder} pre-order, ${thirdPartyCount} 3rd-party skipped)`,
   );
 
+if (blocked) {
+  console.warn(
+    '[Walmart] Scrape incomplete — security challenge prevented product data from being collected.'
+  );
+
+  return {
+    products,
+    blocked: true,
+  };
+}
+
+return {
+  products,
+  blocked: false,
+};
   return products;
 }
 
