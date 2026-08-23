@@ -200,7 +200,7 @@ if (r.error) {
 } else if (r.blocked) {
   log.warn(
     `${r.name.padEnd(10)} blocked/security challenge — ` +
-    `skipping comparison (${r.elapsedMs / 1000).toFixed(1)}s`
+log.warn(`${r.name} — skipping comparison (scraper failed)`);
   );
 } else {
   log.ok(
