@@ -366,22 +366,16 @@ const pagination = extractPagination(nextData);
     `(${inStock} in-stock, ${outOfStock} OOS, ${preOrder} pre-order, ${thirdPartyCount} 3rd-party skipped)`,
   );
 
-if (blocked) {
-  console.warn(
-    '[Walmart] Scrape incomplete — security challenge prevented product data from being collected.'
-  );
+  if (blocked) {
+    console.warn(
+      '[Walmart] Scrape incomplete — security challenge prevented product data from being collected.'
+    );
+  }
 
   return {
     products,
-    blocked: true,
+    blocked,
   };
-}
-
-return {
-  products,
-  blocked: false,
-};
-  return products;
 }
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
@@ -395,10 +389,16 @@ if (require.main === module) {
   const asJson  = args.includes('--json');
 
   scrapeWalmart()
-    .then(products => {
+    .then(result => {
+      const products = result.products ?? [];
+
       if (asJson) {
         console.log(JSON.stringify(products, null, 2));
         return;
+      }
+
+      if (result.blocked) {
+        console.warn('[Walmart] WARNING: Walmart security challenge was detected.');
       }
 
       const sample = showAll ? products : products.slice(0, 5);
