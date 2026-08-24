@@ -34,7 +34,7 @@ const API_BASE   = 'https://api.bestbuy.com/v1/products';
 const HTML_BASE  = 'https://www.bestbuy.com';
 const PAGE_SIZE  = 100;  // max allowed by the Products API
 const DELAY_MS   = 1000;
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 2;
 
 // Fields requested from the Products API — extend here if more data is needed.
 const API_SHOW_FIELDS = [
