@@ -180,14 +180,22 @@ async function scrapeRetailers(phaseNum, totalPhases) {
     enabled.map(({ key, name, fn }) => {
       const t0 = Date.now();
 return fn()
-  .then(products => ({
-    key,
-    name,
-    products,
-    blocked: products?.blocked === true,
-    elapsedMs: Date.now() - t0,
-    error: null,
-  }))
+  .then(result => {
+    const isWalmartResult =
+      key === 'walmart' &&
+      result &&
+      typeof result === 'object' &&
+      !Array.isArray(result);
+
+    return {
+      key,
+      name,
+      products: isWalmartResult ? (result.products ?? []) : result,
+      blocked: isWalmartResult ? result.blocked === true : false,
+      elapsedMs: Date.now() - t0,
+      error: null,
+    };
+  })
         .catch(err   => ({ key, name, products: [],  elapsedMs: Date.now() - t0, error: err }));
     }),
   );
