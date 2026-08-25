@@ -258,7 +258,7 @@ async function scrapeBarnesAndNoble() {
 
   const products  = [];
   const seen      = new Set();
-  let   bookCount = 0;
+  let   filteredCount = 0;
 
   for (const keyword of SEARCH_KEYWORDS) {
     let results;
@@ -284,7 +284,11 @@ async function scrapeBarnesAndNoble() {
       if (seen.has(key)) continue;
       seen.add(key);
 
-      if (!isTcgProduct(raw)) { bookCount++; skipCount++; continue; }
+      if (!isTcgProduct(raw)) {
+  filteredCount++;
+  skipCount++;
+  continue;
+}
 
       products.push(normalizeResult(raw));
       newCount++;
@@ -303,7 +307,7 @@ async function scrapeBarnesAndNoble() {
 
   console.log(
     `[B&N] Done: ${products.length} products ` +
-    `(${inStock} in-stock, ${outOfStock} OOS, ${preOrder} pre-order, ${bookCount} books filtered)`,
+    `(${inStock} in-stock, ${outOfStock} OOS, ${preOrder} pre-order, ${bookCount} books filtered`,
   );
 
   return products;
