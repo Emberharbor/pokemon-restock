@@ -114,23 +114,96 @@ function getStockStatus(availability) {
 
 function isPokemonProduct(name) {
   const lower = (name ?? '').toLowerCase();
-  return lower.includes('pokemon') || lower.includes('pokémon');
+
+  return (
+    lower.includes('pokemon') ||
+    lower.includes('pokémon')
+  );
 }
 
 /**
- * Filter out items that are clearly not TCG products (books, manga, video games).
- * We want physical card game products, not Pokémon-themed books.
+ * Strict Pokémon TCG product filter.
+ *
+ * B&N sells many Pokémon-related products that are NOT TCG:
+ * books, manga, Funko, toys, figures, plush, apparel, etc.
+ *
+ * Only allow titles that contain a strong TCG/product signal.
  */
 function isTcgProduct(raw) {
   const title = (raw?.product?.title ?? '').toLowerCase();
   const categories = (raw?.product?.categories ?? []).join(' ').toLowerCase();
 
-  // B&N also sells Pokemon manga, novels, and art books — exclude those
-  if (categories.includes('books') || categories.includes('media')) {
-    // Allow it only if the title strongly suggests a TCG product
-    const tcgSignals = ['trading card', 'booster', 'elite trainer', 'etb', ' tin', 'collection box', 'starter deck', 'battle deck', 'blister', 'theme deck'];
-    return tcgSignals.some(s => title.includes(s));
+  // Strong Pokémon TCG signals.
+  const tcgSignals = [
+    'trading card game',
+    'pokemon tcg',
+    'pokémon tcg',
+    'booster pack',
+    'booster box',
+    'elite trainer box',
+    'etb',
+    'collection box',
+    'collector chest',
+    'collector box',
+    'premium collection',
+    'special collection',
+    'tin',
+    'blister',
+    'battle deck',
+    'league battle deck',
+    'starter deck',
+    'theme deck',
+    'deck box',
+    'trainer toolkit',
+    'build & battle',
+    'build and battle',
+    'battle academy',
+  ];
+
+  const hasTcgSignal = tcgSignals.some(signal => title.includes(signal));
+
+  if (!hasTcgSignal) {
+    return false;
   }
+
+  // Explicitly reject obvious non-TCG merchandise.
+  const nonTcgSignals = [
+    'book',
+    'novel',
+    'manga',
+    'comic',
+    'coloring',
+    'activity book',
+    'guide',
+    'journal',
+    'calendar',
+    'funko',
+    'bitty pop',
+    'plush',
+    'figure',
+    'figurine',
+    'statue',
+    'toy',
+    'puzzle',
+    'apparel',
+    'shirt',
+    't-shirt',
+    'hoodie',
+    'hat',
+    'backpack',
+    'costume',
+  ];
+
+  if (nonTcgSignals.some(signal => title.includes(signal))) {
+    return false;
+  }
+
+  // If B&N identifies the item as books/media, reject it unless
+  // the title clearly identifies a physical TCG product.
+  if (categories.includes('books') || categories.includes('media')) {
+    return hasTcgSignal;
+  }
+
   return true;
 }
 
